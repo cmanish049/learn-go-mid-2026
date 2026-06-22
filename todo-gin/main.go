@@ -9,8 +9,8 @@ import (
 
 type Todo struct {
 	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Complete bool   `json:"complete"`
+	Title    string `form:"title" json:"title"`
+	Complete bool   `form:"complete" json:"complete"`
 }
 
 var todos = []Todo{
@@ -69,12 +69,32 @@ func getTodo(c *gin.Context) {
 		"error": "todo not found",
 	})
 }
+
+func saveTodo(c *gin.Context) {
+	var todo Todo
+
+	if err := c.BindJSON(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	todo.ID = len(todos) + 1
+
+	todos = append(todos, todo)
+
+	c.JSON(http.StatusCreated, todo)
+}
+
 func main() {
 	router := gin.Default()
 
 	router.GET("/todos", getTodos)
 
 	router.GET("todos/:id", getTodo)
+
+	router.POST("todos", saveTodo)
 
 	router.Run()
 }
